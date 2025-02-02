@@ -87,7 +87,6 @@ export default function RetirementSurvey() {
           <input
             type="email"
             required
-            noValidate
             className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             value={formData.email}
             onChange={(e) => {

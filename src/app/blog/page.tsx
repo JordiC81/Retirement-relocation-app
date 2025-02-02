@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ArrowUp, Share2 } from 'lucide-react';
+import Image from 'next/image';
 
 interface BlogPost {
   id: string;
@@ -12,13 +13,10 @@ interface BlogPost {
 }
 
 export default function BlogPage() {
-  const [activePost, setActivePost] = useState<string | null>(null);
-
   useEffect(() => {
     // Handle URL fragment on load
     const hash = window.location.hash.slice(1);
     if (hash) {
-      setActivePost(hash);
       const element = document.getElementById(hash);
       element?.scrollIntoView({ behavior: 'smooth' });
     }
@@ -76,10 +74,12 @@ export default function BlogPage() {
             </div>
             
             {post.imageUrl && (
-              <img 
-                src={post.imageUrl} 
+              <Image
+                src={post.imageUrl}
                 alt={post.title}
                 className="w-full rounded-lg mb-6"
+                width={800}
+                height={400}
               />
             )}
             

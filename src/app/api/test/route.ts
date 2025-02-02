@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 
 export async function GET(request: Request) {
+  // The 'request' variable is used in the function body
   try {
     // Test Email Configuration
     const transporter = nodemailer.createTransport({

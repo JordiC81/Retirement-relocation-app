@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 const BackgroundSlideshow = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [imageErrors, setImageErrors] = useState({});
+  const [imageErrors, setImageErrors] = useState<{ [key: string]: boolean }>({});
 
   const images = [
     "/Midjourney_bathing in the beach.png",
@@ -66,7 +66,7 @@ const BackgroundSlideshow = () => {
                 animation: currentImageIndex === index ? 'zoom 4s ease-out forwards' : 'none'
               }}
             />
-            {imageErrors[image] && (
+            {Object.prototype.hasOwnProperty.call(imageErrors, image) && imageErrors[image] && (
               <div className="absolute top-0 left-0 bg-red-500 text-white p-2">
                 Failed to load: {image}
               </div>
