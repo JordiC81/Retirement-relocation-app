@@ -70,7 +70,7 @@ export default function Home() {
               {/* Survey Prompt */}
               <div className="mt-12 text-white/90">
                 <p className="text-lg">
-                  At Retirely we're working to help you find the best retirement location. Take the 1 minute survey below to help us build the best product for you.
+                  At Retirely we&apos;re working to help you find the best retirement location. Take the 1 minute survey below to help us build the best product for you.
                 </p>
               </div>
             </div>

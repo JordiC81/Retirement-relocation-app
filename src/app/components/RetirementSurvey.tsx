@@ -66,7 +66,7 @@ export default function RetirementSurvey() {
         desiredInformation: [],
         additionalComments: ''
       });
-    } catch (error) {
+    } catch {  // Removed unused error parameter
       setSubmitStatus('error');
     } finally {
       setIsSubmitting(false);
@@ -77,7 +77,7 @@ export default function RetirementSurvey() {
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
       {submitStatus === 'success' && (
         <div className="mb-4 p-4 bg-green-50 text-green-800 rounded-md">
-          Thank you for completing our survey! We'll reach out when our app launches.
+          Thank you for completing our survey! We&apos;ll reach out when our app launches.
         </div>
       )}
 
