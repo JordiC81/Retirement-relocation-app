@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 
-export async function GET(request: Request) {
-  // The 'request' variable is used in the function body
+export async function GET() {  // Removed unused request parameter
   try {
     // Test Email Configuration
     const transporter = nodemailer.createTransport({

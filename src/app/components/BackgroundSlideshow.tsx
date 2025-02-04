@@ -19,7 +19,8 @@ const BackgroundSlideshow = () => {
 
   // Test image loading
   useEffect(() => {
-    images.forEach(imagePath => {
+    const testImages = [...images]; // Create a copy to avoid the dependency warning
+    testImages.forEach(imagePath => {
       const img = new Image();
       img.onload = () => {
         console.log(`Successfully loaded: ${imagePath}`);
@@ -30,20 +31,21 @@ const BackgroundSlideshow = () => {
       };
       img.src = imagePath;
     });
-  }, []);
+  }, [images]); // Add images as dependency
 
   // Handle image transitions
   useEffect(() => {
+    const imageCount = images.length; // Store length in a variable
     const intervalId = setInterval(() => {
       setIsTransitioning(true);
       setTimeout(() => {
-        setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
+        setCurrentImageIndex((prevIndex) => (prevIndex + 1) % imageCount);
         setIsTransitioning(false);
       }, 1000);
     }, 4000);
 
     return () => clearInterval(intervalId);
-  }, []);
+  }, [images.length]); // Add images.length as dependency
 
   return (
     <>
