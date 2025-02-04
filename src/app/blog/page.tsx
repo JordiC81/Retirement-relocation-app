@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { ArrowUp, Share2 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -31,7 +31,8 @@ export default function BlogPage() {
       });
     } else {
       navigator.clipboard.writeText(url);
-      alert('Link copied to clipboard!');
+      // Using template literals to properly escape the apostrophe
+      alert(`Link copied to clipboard!`);
     }
   };
 
@@ -45,14 +46,20 @@ export default function BlogPage() {
       id: 'retire-in-portugal',
       title: 'Complete Guide to Retiring in Portugal: From Golden Visa to Healthcare',
       date: '2025-01-20',
-      content: 'Portugal has become one of Europe\'s most popular retirement destinations, and for good reason. This comprehensive guide will walk you through everything you need to know about retiring in Portugal.\n\nThe Golden Visa program offers a path to residency through investment. Key benefits include access to the Schengen Area, path to Portuguese citizenship, minimal stay requirements, and family inclusion.\n\nPortugal\'s healthcare system ranks among the best in Europe, with universal public healthcare (SNS), high-quality private hospitals, and affordable health insurance options.',
+      content: `Portugal has become one of Europe's most popular retirement destinations, and for good reason. This comprehensive guide will walk you through everything you need to know about retiring in Portugal.
+
+The Golden Visa program offers a path to residency through investment. Key benefits include access to the Schengen Area, path to Portuguese citizenship, minimal stay requirements, and family inclusion.
+
+Portugal's healthcare system ranks among the best in Europe, with universal public healthcare (SNS), high-quality private hospitals, and affordable health insurance options.`,
       imageUrl: '/api/placeholder/800/400'
     },
     {
       id: 'european-healthcare-systems',
       title: 'Understanding Healthcare Systems Across Southern Europe',
       date: '2025-01-15',
-      content: 'One of the most crucial factors when choosing a retirement destination is the quality and accessibility of healthcare. Southern European countries generally offer universal healthcare coverage, a mix of public and private options, and high standard of medical care.\n\nSpain provides universal public healthcare (SNS) with excellent specialist care. Italy offers the National Health Service (SSN) with strong preventive care programs. Greece has a National Healthcare System (ESY) with a growing private healthcare sector.',
+      content: `One of the most crucial factors when choosing a retirement destination is the quality and accessibility of healthcare. Southern European countries generally offer universal healthcare coverage, a mix of public and private options, and high standard of medical care.
+
+Spain provides universal public healthcare (SNS) with excellent specialist care. Italy offers the National Health Service (SSN) with strong preventive care programs. Greece has a National Healthcare System (ESY) with a growing private healthcare sector.`,
       imageUrl: '/api/placeholder/800/400'
     }
   ];
