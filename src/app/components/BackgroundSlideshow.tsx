@@ -21,9 +21,10 @@ const BackgroundSlideshow = () => {
   const images = useMemo(() => imageUrls, []);
 
   // Load images and handle errors
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    const loadImage = (imagePath: string) => {
-      return new Promise((resolve, reject) => {
+    const loadImage = (imagePath: string): Promise<void> => {
+      return new Promise<void>((resolve, reject) => {
         const img = new Image();
         img.onload = () => resolve();
         img.onerror = () => {
