@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 
-// Move the images array outside the component
 const imageUrls = [
   '/Midjourney_bathing in the beach.png',
   '/Midjourney_hiking in the Alps.png',
@@ -17,28 +16,27 @@ const BackgroundSlideshow = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [imageErrors, setImageErrors] = useState<{ [key: string]: boolean }>({});
 
-  // Memoize the images array
   const images = useMemo(() => imageUrls, []);
 
-  // Load images and handle errors
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    const loadImage = (imagePath: string): Promise<void> => {
-      return new Promise<void>((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => resolve();
-        img.onerror = () => {
-          setImageErrors((prev) => ({ ...prev, [imagePath]: true }));
-          reject();
-        };
-        img.src = imagePath;
-      });
-    };
+  // Memoize the loadImage function
+  const loadImage = useCallback((imagePath: string): Promise<void> => {
+    return new Promise<void>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve();
+      img.onerror = () => {
+        setImageErrors((prev) => ({ ...prev, [imagePath]: true }));
+        reject();
+      };
+      img.src = imagePath;
+    });
+  }, []);
 
+  // Load images and handle errors
+  useEffect(() => {
     Promise.all(images.map(loadImage))
       .then(() => console.log('All images loaded successfully'))
       .catch(() => console.error('Error loading one or more images'));
-  }, [images]);
+  }, [images, loadImage]);
 
   // Handle image transitions
   useEffect(() => {
@@ -47,11 +45,11 @@ const BackgroundSlideshow = () => {
     }, 4000);
 
     return () => clearInterval(intervalId);
-  }, [images]);
+  }, [images.length]); // Only depend on the length
 
   return (
     <>
-      {/* Background Slideshow */}
+      {/* Rest of the component remains the same */}
       <div className="absolute inset-0 w-full h-full overflow-hidden">
         <div className="absolute inset-0 bg-black/40 z-10" />
         {images.map((image, index) => (
@@ -76,7 +74,6 @@ const BackgroundSlideshow = () => {
         ))}
       </div>
 
-      {/* Existing styles */}
       <style jsx>{`
         @keyframes zoom {
           0% {
