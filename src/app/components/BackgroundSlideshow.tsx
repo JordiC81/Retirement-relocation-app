@@ -1,20 +1,24 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+
+// Move the images array outside the component
+const imageUrls = [
+  '/Midjourney_bathing in the beach.png',
+  '/Midjourney_hiking in the Alps.png',
+  '/Midjourney_kitesurfing.png',
+  '/Midjourney_seniors at tennis court.png',
+  '/Midjourney_seniors at the terrace.png',
+  '/Midjourney_seniors running at the beach.png',
+  '/Midjourney_skiing.png',
+];
 
 const BackgroundSlideshow = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [imageErrors, setImageErrors] = useState<{ [key: string]: boolean }>({});
 
-  const images = [
-    '/Midjourney_bathing in the beach.png',
-    '/Midjourney_hiking in the Alps.png',
-    '/Midjourney_kitesurfing.png',
-    '/Midjourney_seniors at tennis court.png',
-    '/Midjourney_seniors at the terrace.png',
-    '/Midjourney_seniors running at the beach.png',
-    '/Midjourney_skiing.png',
-  ];
+  // Memoize the images array
+  const images = useMemo(() => imageUrls, []);
 
   // Load images and handle errors
   useEffect(() => {
@@ -42,7 +46,7 @@ const BackgroundSlideshow = () => {
     }, 4000);
 
     return () => clearInterval(intervalId);
-  }, [images.length]);
+  }, [images]);
 
   return (
     <>
