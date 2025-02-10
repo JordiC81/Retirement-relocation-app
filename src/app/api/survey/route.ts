@@ -135,11 +135,15 @@ export async function POST(request: Request) {
       message: 'Survey response submitted successfully' 
     }, { status: 201 });
 
-  } catch (error) {
-    console.error('Error details:', error);
+  } catch (error: unknown) {
+    // Explicitly handle the error
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    
+    console.error('Error processing survey request:', errorMessage);
+    
     return NextResponse.json({ 
       error: 'Failed to save survey response',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: errorMessage
     }, { status: 500 });
   } finally {
     console.log('Request processing completed');
