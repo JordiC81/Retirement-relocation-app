@@ -3,47 +3,89 @@ import mongoose from 'mongoose';
 import { SurveyResponse } from '@/app/lib/mongodb';
 import nodemailer from 'nodemailer';
 
-export async function POST(request: Request) {
+// MongoDB connection function
+const connectDB = async () => {
   try {
-    const body = await request.json();
-    const ip = request.headers.get('x-forwarded-for') || 'unknown';
-
-    // Connect to MongoDB if not already connected
-    if (mongoose.connection.readyState !== 1) {
-      await mongoose.connect(process.env.MONGODB_URI!);
+    if (mongoose.connection.readyState >= 1) return;
+    
+    if (!process.env.MONGODB_URI) {
+      throw new Error('MONGODB_URI is not defined');
     }
 
-    // Get IP location
-    let locationData = { country: 'Unknown', city: 'Unknown', region: 'Unknown', latitude: null, longitude: null };
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('MongoDB connected successfully');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    throw error;
+  }
+};
+
+export async function POST(request: Request) {
+  try {
+    // Connect to MongoDB
+    await connectDB();
+    console.log('Starting to process survey submission');
+    
+    const body = await request.json();
+    console.log('Received request body:', body);
+    
+    const ip = request.headers.get('x-forwarded-for') || 'unknown';
+    console.log('IP Address:', ip);
+
+    // Get IP location with timeout
+    let locationData = { 
+      country: 'Unknown', 
+      city: 'Unknown', 
+      region: 'Unknown', 
+      latitude: null, 
+      longitude: null 
+    };
+
     try {
-      const geoResponse = await fetch(`https://ipapi.co/${ip}/json/`);
-      const geoData = await geoResponse.json();
-      locationData = {
-        country: geoData.country_name,
-        city: geoData.city,
-        region: geoData.region,
-        latitude: geoData.latitude,
-        longitude: geoData.longitude
-      };
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      
+      const geoResponse = await fetch(`https://ipapi.co/${ip}/json/`, {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (geoResponse.ok) {
+        const geoData = await geoResponse.json();
+        locationData = {
+          country: geoData.country_name || 'Unknown',
+          city: geoData.city || 'Unknown',
+          region: geoData.region || 'Unknown',
+          latitude: geoData.latitude || null,
+          longitude: geoData.longitude || null
+        };
+        console.log('Location data fetched:', locationData);
+      }
     } catch (error) {
       console.error('Error fetching location data:', error);
+      // Continue with default location data
     }
 
     // Create new survey response with location data
     const surveyData = {
       ...body,
       ipAddress: ip,
-      geoLocation: locationData
+      geoLocation: locationData,
+      submittedAt: new Date()
     };
 
+    console.log('Creating survey response');
     const surveyResponse = new SurveyResponse(surveyData);
     await surveyResponse.save();
+    console.log('Survey response saved to database');
 
     // Configure email
+    console.log('Configuring email transport');
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: false,
+      secure: process.env.SMTP_SECURE === 'true',
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASSWORD,
@@ -51,6 +93,7 @@ export async function POST(request: Request) {
     });
 
     // Send notification email
+    console.log('Sending notification email');
     await transporter.sendMail({
       from: process.env.SMTP_FROM,
       to: process.env.NOTIFICATION_EMAIL,
@@ -80,15 +123,20 @@ export async function POST(request: Request) {
         <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
       `
     });
+    console.log('Email sent successfully');
 
     return NextResponse.json({ 
       message: 'Survey response submitted successfully' 
     }, { status: 201 });
 
   } catch (error) {
-    console.error('Error saving survey response:', error);
+    console.error('Detailed error:', error instanceof Error ? error.stack : error);
     return NextResponse.json({ 
-      error: 'Failed to save survey response' 
+      error: 'Failed to save survey response',
+      details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
+  } finally {
+    // Optional: Close MongoDB connection if needed
+    // await mongoose.connection.close();
   }
 }
