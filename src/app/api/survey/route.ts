@@ -6,13 +6,21 @@ import nodemailer from 'nodemailer';
 // MongoDB connection function with timeout
 const connectDB = async () => {
   try {
-    if (mongoose.connection.readyState >= 1) return;
+    console.log('Checking MongoDB connection state...');
+    if (mongoose.connection.readyState >= 1) {
+      console.log('MongoDB already connected');
+      return;
+    }
     
     if (!process.env.MONGODB_URI) {
       throw new Error('MONGODB_URI is not defined');
     }
 
-    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('Initiating new MongoDB connection...');
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000, // 5 seconds timeout
+      socketTimeoutMS: 45000, // 45 seconds timeout
+    });
     console.log('MongoDB connected successfully');
   } catch (error) {
     console.error('MongoDB connection error:', error);
@@ -21,16 +29,20 @@ const connectDB = async () => {
 };
 
 export async function POST(request: Request) {
+  console.log('=== Starting survey submission process ===');
   try {
-    console.log('Starting request processing');
+    console.log('Parsing request body...');
     const body = await request.json();
     const ip = request.headers.get('x-forwarded-for') || 'unknown';
+    console.log('Request parsed successfully, IP:', ip);
 
     // Run operations in parallel
+    console.log('Starting parallel operations...');
     const [locationData] = await Promise.all([
       // Get IP location with shorter timeout (1.5s)
       (async () => {
         try {
+          console.log('Fetching IP location data...');
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 1500);
           const geoResponse = await fetch(`https://ipapi.co/${ip}/json/`, {
@@ -38,7 +50,7 @@ export async function POST(request: Request) {
           });
           clearTimeout(timeoutId);
           const geoData = await geoResponse.json();
-          console.log('Location data fetched successfully');
+          console.log('Location data fetched successfully:', geoData);
           return {
             country: geoData.country_name || 'Unknown',
             city: geoData.city || 'Unknown',
@@ -58,11 +70,14 @@ export async function POST(request: Request) {
         }
       })(),
       // Connect to MongoDB
-      connectDB()
+      (async () => {
+        console.log('Initiating MongoDB connection...');
+        await connectDB();
+        console.log('MongoDB connection successful');
+      })()
     ]);
 
-    console.log('Saving survey response to database');
-    // Save survey response
+    console.log('Preparing survey data for database...');
     const surveyData = {
       ...body,
       ipAddress: ip,
@@ -70,11 +85,13 @@ export async function POST(request: Request) {
       submittedAt: new Date()
     };
 
+    console.log('Creating survey document...');
     const surveyResponse = new SurveyResponse(surveyData);
+    console.log('Saving survey to database...');
     await surveyResponse.save();
-    console.log('Survey response saved successfully');
+    console.log('Survey saved successfully to database');
 
-    console.log('Configuring email transport');
+    console.log('Configuring email transport...');
     // Configure and send email
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
@@ -86,11 +103,16 @@ export async function POST(request: Request) {
       },
     });
 
-    console.log('Sending email notification');
+    console.log('Preparing to send email notification...');
     // Send email with a timeout
     const emailPromise = new Promise(async (resolve, reject) => {
-      const timeoutId = setTimeout(() => reject(new Error('Email timeout')), 5000);
+      const timeoutId = setTimeout(() => {
+        console.error('Email sending timed out');
+        reject(new Error('Email timeout'));
+      }, 5000);
+
       try {
+        console.log('Sending email...');
         await transporter.sendMail({
           from: process.env.SMTP_FROM,
           to: process.env.NOTIFICATION_EMAIL,
@@ -129,23 +151,28 @@ export async function POST(request: Request) {
       }
     });
 
+    console.log('Waiting for email to send...');
     await emailPromise;
+    console.log('=== Survey submission process completed successfully ===');
 
     return NextResponse.json({ 
       message: 'Survey response submitted successfully' 
     }, { status: 201 });
 
-  } catch (error: unknown) {
+  } catch (error) {
     // Explicitly handle the error
     const errorMessage = error instanceof Error ? error.message : String(error);
     
-    console.error('Error processing survey request:', errorMessage);
+    console.error('Error in survey submission process:', errorMessage);
+    if (error instanceof Error) {
+      console.error('Error stack:', error.stack);
+    }
     
     return NextResponse.json({ 
       error: 'Failed to save survey response',
       details: errorMessage
     }, { status: 500 });
   } finally {
-    console.log('Request processing completed');
+    console.log('=== Survey submission process ended ===');
   }
 }

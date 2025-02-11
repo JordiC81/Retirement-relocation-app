@@ -1,0 +1,7 @@
+{
+    "functions": {
+      "api/survey/route.ts": {
+        "maxDuration": 60
+      }
+    }
+  }
