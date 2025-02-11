@@ -47,7 +47,7 @@ export async function POST(request: Request) {
             longitude: geoData.longitude || null
           };
         } catch (error) {
-          console.log('IP location fetch failed, using defaults');
+          console.error('IP location fetch failed:', error);
           return {
             country: 'Unknown',
             city: 'Unknown',
