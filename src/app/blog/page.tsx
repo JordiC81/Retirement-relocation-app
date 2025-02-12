@@ -42,11 +42,18 @@ export default function BlogPage() {
     // Split content by newlines while preserving them
     const lines = content.split(/(?<=\n)/);
     return lines.map((line, index) => {
-      // Check if the line is a heading (starts with a number or specific keywords)
+      // Check if the line is a heading
       if (/^\d+\.|\b(The Importance of|Challenges Faced|Strategies to Build|Conclusion|The Retirement Dream Awaits)\b/.test(line)) {
         return <p key={index} className="font-bold text-black">{line}</p>;
       }
-      return <p key={index}>{line}</p>;
+      
+      // Replace retirely.eu references with hyperlinks
+      const processedLine = line.replace(
+        /\b(retirely\.eu|www\.retirely\.eu)\b/g,
+        '<a href="https://www.retirely.eu" className="text-blue-600 hover:text-blue-800 underline">www.retirely.eu</a>'
+      );
+      
+      return <p key={index} dangerouslySetInnerHTML={{ __html: processedLine }} />;
     });
   };
 
@@ -75,7 +82,7 @@ The warmth of Southern Europe extends beyond the climate. The locals are famousl
 
 The Retirement Dream Awaits
 
-Retiring in Southern Europe is about more than just finding a place to live---it's about embracing a lifestyle that prioritizes well-being, adventure, and connection. With its incredible climate, unbeatable quality of life, affordability, and sense of community, Southern Europe is the perfect place to make the most of your retirement years. Why settle for ordinary when you can experience extraordinary? At retirely.eu we help you find the right place to retire in paradise.`,
+Retiring in Southern Europe is about more than just finding a place to live---it's about embracing a lifestyle that prioritizes well-being, adventure, and connection. With its incredible climate, unbeatable quality of life, affordability, and sense of community, Southern Europe is the perfect place to make the most of your retirement years. Why settle for ordinary when you can experience extraordinary? At www.retirely.eu we help you find the right place to retire in paradise.`,
       imageUrl: '/Why Retire in Southern Europe.png'
     },
     {
@@ -94,7 +101,7 @@ Madrid and Barcelona also feature prominently, offering rich cultural experience
 
 Spain's dominance in these rankings underscores its allure as a premier destination for those seeking a fulfilling and enriching living experience abroad.
 
-At Retirely.eu, we specialize in helping you discover the perfect place to retire in paradise. Let us guide you to your ideal retirement destination.`,
+At www.retirely.eu, we specialize in helping you discover the perfect place to retire in paradise. Let us guide you to your ideal retirement destination.`,
       imageUrl: '/Best Country to Retire In Spain Dominates.jpg'
     },
     {
@@ -123,7 +130,7 @@ Strategies to Build Your Community Abroad
 
 Conclusion
 
-Finding and nurturing a community is paramount for retirees settling abroad. A strong support network not only enriches your daily life but also provides practical assistance and emotional well-being. At Retirely.eu, we help you discover the perfect place to retire in paradise. Let us guide you to your ideal retirement destination, ensuring you find a community where you can truly belong.`,
+Finding and nurturing a community is paramount for retirees settling abroad. A strong support network not only enriches your daily life but also provides practical assistance and emotional well-being. At www.retirely.eu, we help you discover the perfect place to retire in paradise. Let us guide you to your ideal retirement destination, ensuring you find a community where you can truly belong.`,
       imageUrl: '/the importance of community.png'
     }
   ];
@@ -154,7 +161,7 @@ Finding and nurturing a community is paramount for retirees settling abroad. A s
               />
             )}
             
-            <div className="prose max-w-none mb-6 space-y-8">
+            <div className="prose prose-a:text-blue-600 prose-a:underline hover:prose-a:text-blue-800 max-w-none mb-6 space-y-8">
               {formatContent(post.content)}
             </div>
             
