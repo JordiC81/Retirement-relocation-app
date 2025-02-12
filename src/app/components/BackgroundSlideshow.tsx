@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 
 const imageUrls = [
-  '/Midjourney_bathing in the beach.png',
+  '/mediterranean cove.png',
   '/Midjourney_hiking in the Alps.png',
   '/Midjourney_kitesurfing.png',
   '/Midjourney_seniors at tennis court.png',
