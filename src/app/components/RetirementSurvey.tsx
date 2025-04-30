@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { event } from '../lib/gtag';
 
 interface SurveyFormData {
   email: string;
@@ -48,6 +49,13 @@ export default function RetirementSurvey() {
     setSubmitStatus(null);
 
     try {
+      // Track form submission attempt
+      event({
+        action: 'submit_survey',
+        category: 'engagement',
+        label: 'retirement_survey_submission_attempt',
+      });
+
       const response = await fetch('/api/survey', {
         method: 'POST',
         headers: {
@@ -58,6 +66,32 @@ export default function RetirementSurvey() {
 
       if (!response.ok) throw new Error('Submission failed');
       
+      // Track successful submission
+      event({
+        action: 'submit_survey',
+        category: 'engagement',
+        label: 'retirement_survey_completed',
+        value: 1,
+      });
+
+      // Track selected countries
+      formData.interestedCountries.forEach(country => {
+        event({
+          action: 'select_country',
+          category: 'preferences',
+          label: country,
+        });
+      });
+
+      // Track selected information types
+      formData.desiredInformation.forEach(info => {
+        event({
+          action: 'select_information',
+          category: 'preferences',
+          label: info,
+        });
+      });
+      
       setSubmitStatus('success');
       setFormData({
         email: '',
@@ -66,11 +100,70 @@ export default function RetirementSurvey() {
         desiredInformation: [],
         additionalComments: ''
       });
-    } catch {  // Removed unused error parameter
+    } catch {
+      // Track submission error
+      event({
+        action: 'submit_error',
+        category: 'error',
+        label: 'retirement_survey_submission_failed',
+      });
+      
       setSubmitStatus('error');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Track when user selects a country
+  const handleCountryChange = (country: string, isChecked: boolean) => {
+    if (isChecked && formData.interestedCountries.length >= 5) {
+      event({
+        action: 'selection_limit_reached',
+        category: 'form_interaction',
+        label: 'country_limit',
+      });
+      alert('You can only select up to 5 countries');
+      return;
+    }
+
+    if (isChecked) {
+      event({
+        action: 'select_option',
+        category: 'form_interaction',
+        label: `country_${country}`,
+      });
+    }
+
+    const updatedCountries = isChecked
+      ? [...formData.interestedCountries, country]
+      : formData.interestedCountries.filter(c => c !== country);
+    setFormData({ ...formData, interestedCountries: updatedCountries });
+  };
+
+  // Track when user selects an information type
+  const handleInfoChange = (info: string, isChecked: boolean) => {
+    if (isChecked && formData.desiredInformation.length >= 5) {
+      event({
+        action: 'selection_limit_reached',
+        category: 'form_interaction',
+        label: 'info_limit',
+      });
+      alert('You can only select up to 5 options');
+      return;
+    }
+
+    if (isChecked) {
+      event({
+        action: 'select_option',
+        category: 'form_interaction',
+        label: `info_${info}`,
+      });
+    }
+
+    const updatedInfo = isChecked
+      ? [...formData.desiredInformation, info]
+      : formData.desiredInformation.filter(i => i !== info);
+    setFormData({ ...formData, desiredInformation: updatedInfo });
   };
 
   return (
@@ -97,8 +190,24 @@ export default function RetirementSurvey() {
               });
               if (newEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
                 setEmailError('Please include a valid email address');
+                // Track email validation error
+                event({
+                  action: 'validation_error',
+                  category: 'form_interaction',
+                  label: 'email_invalid',
+                });
               } else {
                 setEmailError('');
+              }
+            }}
+            onBlur={() => {
+              if (formData.email) {
+                // Track when user completes email field
+                event({
+                  action: 'field_complete',
+                  category: 'form_interaction',
+                  label: 'email',
+                });
               }
             }}
             placeholder="your@email.com"
@@ -128,6 +237,22 @@ export default function RetirementSurvey() {
                 setHelpWordLimitError('');
               } else {
                 setHelpWordLimitError('Word limit reached. Maximum 100 words allowed.');
+                // Track word limit reached
+                event({
+                  action: 'validation_error',
+                  category: 'form_interaction',
+                  label: 'help_word_limit',
+                });
+              }
+            }}
+            onBlur={() => {
+              if (formData.helpRequest) {
+                // Track when user completes help request field
+                event({
+                  action: 'field_complete',
+                  category: 'form_interaction',
+                  label: 'help_request',
+                });
               }
             }}
             placeholder={`I want to retire somewhere but I do not know where\nI know where to retire but would like to meet other people there\nother`}
@@ -164,16 +289,7 @@ export default function RetirementSurvey() {
                   id={`country-${country}`}
                   className="mr-2 rounded border-gray-300 focus:ring-blue-500"
                   checked={formData.interestedCountries.includes(country)}
-                  onChange={(e) => {
-                    if (e.target.checked && formData.interestedCountries.length >= 5) {
-                      alert('You can only select up to 5 countries');
-                      return;
-                    }
-                    const updatedCountries = e.target.checked
-                      ? [...formData.interestedCountries, country]
-                      : formData.interestedCountries.filter(c => c !== country);
-                    setFormData({ ...formData, interestedCountries: updatedCountries });
-                  }}
+                  onChange={(e) => handleCountryChange(country, e.target.checked)}
                 />
                 <label htmlFor={`country-${country}`} className="text-sm">
                   {country}
@@ -214,16 +330,7 @@ export default function RetirementSurvey() {
                   id={`info-${info}`}
                   className="mr-2 rounded border-gray-300 focus:ring-blue-500"
                   checked={formData.desiredInformation.includes(info)}
-                  onChange={(e) => {
-                    if (e.target.checked && formData.desiredInformation.length >= 5) {
-                      alert('You can only select up to 5 options');
-                      return;
-                    }
-                    const updatedInfo = e.target.checked
-                      ? [...formData.desiredInformation, info]
-                      : formData.desiredInformation.filter(i => i !== info);
-                    setFormData({ ...formData, desiredInformation: updatedInfo });
-                  }}
+                  onChange={(e) => handleInfoChange(info, e.target.checked)}
                 />
                 <label htmlFor={`info-${info}`} className="text-sm">
                   {info}
@@ -253,6 +360,22 @@ export default function RetirementSurvey() {
                 setCommentsWordLimitError('');
               } else {
                 setCommentsWordLimitError('Word limit reached. Maximum 100 words allowed.');
+                // Track comments word limit reached
+                event({
+                  action: 'validation_error',
+                  category: 'form_interaction',
+                  label: 'comments_word_limit',
+                });
+              }
+            }}
+            onBlur={() => {
+              if (formData.additionalComments) {
+                // Track when user completes additional comments field
+                event({
+                  action: 'field_complete',
+                  category: 'form_interaction',
+                  label: 'additional_comments',
+                });
               }
             }}
             placeholder="Any other requirements or preferences?"
@@ -283,6 +406,16 @@ export default function RetirementSurvey() {
               ? 'bg-blue-300 cursor-not-allowed' 
               : 'bg-blue-500 hover:bg-blue-600'
           }`}
+          onClick={() => {
+            if (!isFormValid()) {
+              // Track invalid form submission attempt
+              event({
+                action: 'validation_error',
+                category: 'form_interaction',
+                label: 'form_invalid',
+              });
+            }
+          }}
         >
           {isSubmitting ? 'Submitting...' : 'Submit'}
         </button>
