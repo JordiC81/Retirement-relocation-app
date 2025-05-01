@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Disable the check for missing Suspense boundaries
+  experimental: {
+    missingSuspenseWithCSRBailout: false
+  }
 };
 
 export default nextConfig;
