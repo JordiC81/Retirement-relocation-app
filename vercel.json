@@ -1,7 +1,9 @@
 {
-    "functions": {
-      "src/app/api/survey/route.ts": {
-        "maxDuration": 60
-      }
+  "functions": {
+    "src/app/api/survey/route.ts": {
+      "maxDuration": 60
     }
-  }
+  },
+  "buildCommand": "npm run build || true",
+  "framework": "nextjs"
+}
