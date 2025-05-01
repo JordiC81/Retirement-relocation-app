@@ -8,10 +8,12 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true
   },
-  // Add these settings to address the 404 page issue
-  output: "export", // Generate static output
-  distDir: "out", // Output directory
-  // Remove the not-found page from static generation
+  // Change from 'export' to 'standalone' to support API routes
+  output: "standalone",
+  // Remove distDir setting as it's not needed with standalone output
+  // distDir: "out", 
+  
+  // Keep the experimental settings
   experimental: {
     ppr: false // Disable Partial Prerendering
   }
