@@ -1,5 +1,9 @@
-// src/app/not-found.js
-export default function NotFound() {
+'use client';
+
+import { Suspense } from 'react';
+
+// Content component that would potentially use client hooks
+function NotFoundContent() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center text-center px-4 py-16">
       <h1 className="text-4xl font-bold mb-4">404 - Page Not Found</h1>
@@ -8,5 +12,16 @@ export default function NotFound() {
         Return to Home
       </a>
     </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function NotFound() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">
+      <p className="text-xl">Loading...</p>
+    </div>}>
+      <NotFoundContent />
+    </Suspense>
   );
 }
