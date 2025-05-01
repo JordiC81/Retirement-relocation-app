@@ -1,29 +1,48 @@
 // src/app/lib/gtag.ts
 
-export const GA_TRACKING_ID = 'G-GD13L63NED'; // Your actual GA4 ID
+// Your Google Analytics tracking ID
+export const GA_TRACKING_ID = 'G-GD13L63NED';
 
-// Add safety checks for server-side rendering
-export const pageview = (url: string) => {
-  if (typeof window !== 'undefined' && (window as any).gtag) {
-    (window as any).gtag('config', GA_TRACKING_ID, {
+// Define the window with gtag property for TypeScript
+interface WindowWithGTag extends Window {
+  gtag: (
+    command: string,
+    targetId: string,
+    config?: {
+      page_path?: string;
+      event_category?: string;
+      event_label?: string;
+      value?: number;
+      [key: string]: unknown;
+    }
+  ) => void;
+}
+
+// Type for event parameters
+export interface GTagEvent {
+  action: string;
+  category: string;
+  label: string;
+  value?: number;
+}
+
+// https://developers.google.com/analytics/devguides/collection/gtagjs/pages
+export const pageview = (url: string): void => {
+  // Type guard to check if gtag is available
+  if (typeof window !== 'undefined' && 'gtag' in window) {
+    const typedWindow = window as WindowWithGTag;
+    typedWindow.gtag('config', GA_TRACKING_ID, {
       page_path: url,
     });
   }
 };
 
-export const event = ({
-  action,
-  category,
-  label,
-  value,
-}: {
-  action: string;
-  category: string;
-  label: string;
-  value?: number; // Made value optional
-}) => {
-  if (typeof window !== 'undefined' && (window as any).gtag) {
-    (window as any).gtag('event', action, {
+// https://developers.google.com/analytics/devguides/collection/gtagjs/events
+export const event = ({ action, category, label, value }: GTagEvent): void => {
+  // Type guard to check if gtag is available
+  if (typeof window !== 'undefined' && 'gtag' in window) {
+    const typedWindow = window as WindowWithGTag;
+    typedWindow.gtag('event', action, {
       event_category: category,
       event_label: label,
       value,
